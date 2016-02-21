@@ -1,0 +1,354 @@
+; Calais le 29/1/06
+
+; Bonjour,
+
+; INTRODUCTION
+
+; SuperPoupées pour UnrealIRCD est probablement le dernier addon que j'écrirai dans la lignée des "Magneto & Cie", parce que, honnêtement, je commence à en avoir ma claque :)) J'ai mis un temps fou à le mettre en ligne, car j'avais la flemme de pondre une aide sur son fonctionnement. C'est maintenant chose faite. Lisez bien, parce que je ne vais pas répéter deux fois, hein!
+
+; AVERTISSEMENT
+
+; Il est préférable de loader cet addon (/load -rs sp.txt hein!) sur un mirc vierge, de manière à ce que les instructions hautement évoluées de cet addon n'interfèrent pas avec un script existant. Si vous avez moins de 30 mois, ce script n'est pas fait pour vous. Mais vous devriez le savoir, vu que vous ne savez pas encore lire!!
+
+; BUT
+
+; Cet addon remplace le vieux "linkeur" des années 2000. Il fournit le même service que celui-ci, mais est plus pratique à utiliser, et plus souple à configurer.
+
+; Pour rappel, le linkeur (comme cet addon) sert à effectuer un link unilatéral entre un serveur et votre propre serveur irc. Il permet de mirroriser sur votre serveur (ou celui de votre ami) ce qui se passe dans les chans que vous espionnez sur un serveur institutionnel (sur undernet, ou wanadoo, ou autre). Son principe: il "linke" avec votre serveur et crée des bots virtuels (des "poupées") qui se comportent de la même manière que les originaux sur l'autre serveur, et ce, en temps réel. Ces bots évoluent tous dans UN channel (le vôtre, eh!), dont le nom est configurable. Magneto, que vous connaissez peut être déjà, fournit grosso-modo le même service, sauf qu'il fonctionne en différé. J'ai entendu dire que ce service existait déjà sous linux, mais je n'en sais pas plus. 
+
+; Si vous êtes connecté à votre serveur avec un mirc, et que vous êtes op (ou ircop), vous pouvez agir sur les bots virtuels: kick, ban, etc. C'est donc pratique si vous souhaitez tester votre super système de protection anti-flood, anti-insultes, anti-tout, sans occasionner la moindre gêne. C'est pratique aussi pour créer du trafic dans votre channel préféré sur votre serveur, ne serait-ce que parce que vous vous sentez un peu seul, comme moi ce dimanche soir... merde c'est déjà 20h00, et demain on bosse...
+
+; MATERIEL ET LOGICIEL REQUIS
+
+; L'addon nécessite, pour fonctionner, deux mirc et une session Unreal (3.2.3). La session Unreal peut être sur votre PC, ou, sur celui d'un ami si celui-ci vous a donné les droits de link; il faut que vous en connaissiez l'adresse ip et le port de link (souvent c'est 6667).
+
+; L'un des mirc est connecté sur le serveur à mirroriser, et est équipé de l'addon "superpoupees". L'autre mirc est connecté sur votre serveur servant de miroir (ou celui de votre ami, voir plus haut). Votre serveur devra avoir quelquepart dans sa configuration (unrealircd.conf) le bout de code suivant:
+
+; link    *.*
+; {
+; 	username	*;
+; 	hostname 	*;
+; 	bind-ip 	*;
+; 	port 		6667;
+; 	hub             *;
+; 	password-connect "openaccess";
+; 	password-receive "openaccess";
+; 	class           servers;
+; 		options {
+; 			zip;
+; 		};
+; };
+
+; Attention, ce code est un gros trou de sécurité; ne l'utilisez surtout pas sur un serveur en ligne 24/24!! On peut rendre ce link un peu plus selectif en remplaçant link *.* par link irc.poupees.org. Vous pouvez évidemment remplacer "openaccess" par le passe de votre choix (je vous le recommande): il suffira ensuite de le spécifier dans le configuration de l'addon.
+
+; CONFIGURATION
+
+; Dans la configuration, vous renseignez les champs suivants:
+
+; Server's ip address: l'ip du serveur (localhost ou 127.0.0.1 s'il est sur votre machine)
+; Linking port: probablement 6667, ou 4400 si vous préférez utiliser mirc script server :)
+; Linking pass: le passe de link que vous aurez mis dans la section link (openaccess...)
+; Chan miroir: le canal dans lequel vous souhaitez faire évoluer vos poupées.
+; /Who on join: de préférence, laisser décocher. Renseigne sur le vrai nom de la personne, mais fait un /who a chaque on join ce qui peut produire du flood et du Max SendQ exceeded...
+
+; FONCTIONNEMENT
+
+; Connectez-vous sur votre serveur à vous (ou celui de votre ami) avec lequel vous linkez, par l'intermédiaire de votre script préféré; joignez votre channel miroir. Connectez ensuite le mirc équipé de l'addon "Superpoupées" sur le serveur institutionnel de votre choix (wanadoo, undernet...), joignez le channel qui vous convient, et faites "Lancer les poupées" par le menu commandes. Votre channel miroir va progressivement se remplir de poupées qui baratinent, et agissent exactement à l'image de leurs originales sur le serveur institutionnel. C'est y pas beau cha madame?
+
+
+; LES PLUS DE MONSIEUR PLUS!
+
+; Vous pouvez mirroriser plusieurs channels: tout le monde de ces channels se retrouvera regroupé sur votre channel miroir de votre serveur à vous. Ca marche aussi si certaines personnes se retrouvent dans plusieurs de ces channels.
+
+; Si vous faites /whois sur une de ces poupées, vous verrez quelque chose du genre:
+
+; -
+; BoyQc is BiQc@modemcable055.158-81-70.mc.videotron.ca * Une poupée...
+; BoyQc on +#radio27 
+; BoyQc using irc.poupees.org Service de link issu de Magneto
+; BoyQc End of /WHOIS list.
+; -
+
+; En cochant "/who on join" avant de lancer le truc, vous verrez leur vrai nom, mais cela force l'addon a faire un /who a chaque fois qu'un pseudo joint le chan. Dangereux lors des mass join flood (dus à des clones ou autre), aussi je ne vous le recommande pas.
+
+; Vous remarquerez que les poupées n'apparaissent qu'à la condition que leurs originales effectuent une action quelconque sur le channl à mirroriser. Pour forcer leur arrivée sur le chan miroir, faire un /who #channel coté serveur à mirroriser. Au meilleur des cas vous allez instantanément remplir le channel miroir par les poupées. Vous aurez donc un channel clone de l'original. Au pire des cas, vous vous ferez déconnecter par un MaxSendQ exceeded si le serveur institutionnel n'est pas sympa. Ca m'est déjà arrivé, avec #mp3passion d'undernet :))
+
+; REMERCIEMENTS
+
+; Remerciement à Dj-Philo qui a testé une première version de cet addon, et qui est à l'origine du mot "poupées".
+
+; ----------------------------------------------------------------------------------------------------
+
+dialog poupees {
+  title "Configuration de Poupees for Unreal"
+  size -1 -1 400 212
+
+  box "", 11, 10 10 380 180
+  button "&Accept", 101, 260 62 120 25, default
+  button "&Cancel", 111, 260 94 120 25,cancel
+  text "IP du serveur", 103, 0 30 80 25,right
+  text "Port de link", 104, 0 62 80 25,right
+  text "Passe de link", 107, 0 94 80 25,right
+  text "Chan miroir", 109, 0 126 80 25,right
+  text "/WHO on join", 112, 0 158 80 25,right
+
+  edit "",105,115 30 100 25,right
+  edit "",106,115 62 100 25,right
+  edit "",108,115 94 100 25,right
+  edit "",110,115 126 100 25,right
+  check "(Yes/No)",113,115 158 100 25,right
+}
+
+on 1:dialog:poupees:edit:105:{ %tempserv = $did(105).text }
+on 1:dialog:poupees:edit:106:{ %tempport = $did(106).text }
+on 1:dialog:poupees:edit:108:{ %temppass = $did(108).text }
+on 1:dialog:poupees:edit:110:{ %tempchan = $did(110).text }
+on 1:dialog:poupees:sclick:113:{ %tempwho = $iif($did(113).state == 1,$true,$false) }
+on 1:dialog:poupees:sclick:101: dialog -c poupees | set %SP.linkport %tempport | set %SP.linkpass %temppass | set %SP.linkserv %tempserv | set %SP.linkwho %tempwho | set %SP.linkchan %tempchan
+
+on 1:load: { 
+  set %SP.linkserv localhost
+  set %SP.linkpass openaccess
+  set %SP.linkchan #monchannel
+  set %SP.linkport 6667
+  set %SP.linkwho $false
+}
+
+on 1:unload: unset %SP.linkpass | unset %SP.linkserv | unset %SP.linkport | unset %SP.linkchan | unset %tempport | unset %tempserv | unset %temppass | unset %tempchan
+
+alias LNK.magconfig {
+  ; set %temp $?="Quel est le passe local de link?" | if ( %temp != $null ) { set %SP.linkpass %temp }
+  dialog -m poupees poupees 
+  did -ra poupees 105 %SP.linkserv
+  did -ra poupees 106 %SP.linkport
+  did -ra poupees 108 %SP.linkpass
+  did -ra poupees 110 %SP.linkchan
+  did $iif(%SP.linkwho,-c,-u) poupees 113
+  set %tempport %SP.linkport | set %temppass %SP.linkpass | set %tempserv %SP.linkserv | set %tempwho %SP.linkwho | set %tempchan %SP.linkchan
+}
+
+alias LNK.initlink { 
+  if ( %linked == $true ) LNK.termine
+LNK.initlnk %SP.linkserv %SP.linkport }
+
+alias LNK.initlnk {
+  if ( $2 == $null ) return
+  enable #LNKOuvretel
+
+  set %i 1
+  :boucle
+  set %j 1
+  :boucle2
+  %temp = LNKTelnet $+ %j
+  if ( $sock(%temp).name == $null ) { sockopen %temp $1 $2 | goto suite2 }
+  inc %j
+  goto boucle2
+  :suite2
+  window -hekl20 @ $+ %temp  ms sans serif 14 | titlebar @ $+ %temp sur $1 ( $+ $2 $+ )
+  aline -ph 4 @ $+ %temp Client Telnet - par Averell
+}
+
+#LNKOuvretel off
+on 1:sockopen:LNKTelnet*: {
+  if ( $sockerr > 0 ) { aline -ph 2 @ $+ $sockname Pas de connexion trouvée | echo 2 -s * mIRC Script Server non trouvé, ou serveur fermé | return }
+  else  { aline -ph 4 @ $+ $sockname Connexion établie | set %linked $true | .enable #LNKOffline }
+  aline -ph 1 @ $+ $sockname pass : $+ %SP.linkpass
+  aline -ph 1 @ $+ $sockname server irc.poupees.org 1 :Service de link issu de Magneto
+  sockwrite -n $sockname pass : $+ %SP.linkpass
+  sockwrite -n $sockname server irc.poupees.org 1 :Service de link issu de Magneto
+  LNK.initlog
+  .timerping 0 60 /pingtelbis
+}
+#LNKOuvretel end
+
+alias pingtelbis sockwrite -n lnktelnet1 PING :12345
+
+on 1:close:@LNKTelnet*: %temp = $gettok($target,1,58) | %temp = $right(%temp,$calc($len(%temp)-1)) | sockclose %temp | unset %SP.linked | disable #LNKOuvretel | .timerping off
+
+alias LNK.initlog {
+  ;
+  window -h @Log | titlebar @log de $1 | clear @log
+  %logchan = $1
+  .enable #LNKlog | echo 3 $1 * Log de $1 commencé
+  who $me
+  %i = 1
+  while ( %i <= $chan(0) ) {
+    LNK.st : $+ $me JOIN $chan(%i)
+    ;    topic $chan(%i) 
+    ; mode $chan(%i)
+    inc %i
+  }
+}
+
+#LNKlog off
+
+alias LNK.st { 
+  aline -ph 1 @log %timer $1- | LNK.envoie %timer $1- | set %timer 0
+}
+
+raw 352:*:{ 
+  if ( $level($6) < 2 ) LNK.st NICK $6 1 2 $3 $4 irc.poupees.org : $+ $9- 
+  if ( $6 == X || $6 == chanserv || $6 == irix ) { LNK.st : $+ $6 MODE $6 +q }
+  if ( $chr(42) isin $7 ) { LNK.st : $+ $6 MODE $6 +o }
+  .auser =2 $6
+  set %i 1 | set %N $comchan($6,0)
+  :boucle
+  set %chan $comchan($6,%i)
+  LNK.st : $+ $6 JOIN %chan
+  if ( $6 isop %chan ) { LNK.st :irc.poupees.org MODE %chan +o $6 }
+  else if ( $6 ison %chan ) { LNK.st :irc.poupees.org MODE %chan -o $6 }
+  if ( $6 isvo %chan ) LNK.st :irc.poupees.org MODE %chan +v $6
+
+  inc %i
+  if ( %i > %N ) return
+  goto boucle
+}
+
+alias LNK.rotutu  if ( $comchan($1,0) == 0 ) { LNK.st : $+ $1 QUIT :Leaving | .ruser 2 $1 }
+alias LNK.rutoto {
+  if ( $level($1) < 2 ) { 
+    set %user $gettok($2,1,64) | set %host $gettok($2,2,64)
+    LNK.st NICK $1 1 2 %user %host irc.poupees.org :Unknown user
+    .auser =2 $1
+  }
+  LNK.st : $+ $1 $3 $me : $+ $4-
+}
+
+alias LNK.myst {
+  if ( $level($1) < 2 ) { 
+    set %user $gettok($2,1,64) | set %host $gettok($2,2,64)
+    LNK.st NICK $1 1 2 %user %host irc.poupees.org :Une poupée...
+    .auser =2 $1
+    LNK.st : $+ $1 JOIN $4
+    if ($1 isvo $4) { LNK.st :irc.poupees.org MODE $4 +v $1 }
+    elseif ($1 isop $4) { LNK.st :irc.poupees.org MODE $4 +o $1 }
+    else { LNK.st :irc.poupees.org MODE $4 -o $1 }
+  }
+  LNK.st : $+ $1 $3 $4 $5-
+}
+
+on 1:text:*:#: LNK.myst $nick $address PRIVMSG $chan : $+ $1-
+on 1:action:*:#:LNK.myst $nick $address PRIVMSG $chan : $+ $chr(1) $+ ACTION $1- $chr(1)
+on +2:text:*:#: LNK.st : $+ $nick PRIVMSG $chan : $+ $1-
+on 1:join:#: { 
+  if ( $nick == $me ) { topic $chan | mode $chan }
+  elseif (%SP.linkwho == $false) { LNK.myst $nick $address JOIN $chan }
+else who $nick }
+on +2:join:#: { if (%SP.linkwho == $false) { LNK.myst $nick $address JOIN $chan }
+  else who $nick
+}
+on 2:part:#:LNK.st : $+ $nick PART $chan | .timer 1 1 LNK.rotutu $nick 
+on 2:quit:LNK.st  : $+ $nick QUIT : $+ $1- | .ruser 2 $nick
+on 2:op:#:LNK.myst $nick $address MODE $chan +o $opnick
+on 2:serverop:#:LNK.st  : $+ $nick MODE $chan +o $opnick
+on 2:deop:#:LNK.myst $nick $address MODE $chan -o $opnick
+on 2:voice:#:LNK.myst $nick $address MODE $chan +v $vnick
+on 2:devoice:#:LNK.myst $nick $address MODE $chan -v $vnick
+on 2:help:#:LNK.myst $nick $address MODE $chan +h $hnick
+on 2:dehelp:#:LNK.myst $nick $address MODE $chan -h $hnick
+on 2:nick: LNK.st  : $+ $nick NICK : $+ $newnick | .ruser 2 $nick | .auser =2 $newnick
+on 1:ban:#: LNK.myst $nick $address MODE $chan +b $banmask
+on 1:unban:#: LNK.st  : $+ $nick MODE $chan -b $banmask
+raw 332:*: LNK.st :irc.poupees.org TOPIC $2 : $+ $3-
+on 2:kick:#: LNK.myst $nick $address KICK $chan $knick : $+ $1- 
+; | .timer 1 1 LNK.rotutu $knick
+on 2:notice:*:#:LNK.myst $nick $address NOTICE $chan : $+ $1-
+ctcp 2:*:#: LNK.st  : $+ $nick PRIVMSG $chan : $+ $chr(1) $+ $1- $chr(1)
+alias dup who $active | topic $active | mode $active
+raw 324:*:LNK.st  :irc.poupees.org MODE $2 $3-
+on 2:action:*:#:LNK.myst $nick $address PRIVMSG $chan : $+ $chr(1) $+ ACTION $1- $chr(1)
+on 2:topic:#:LNK.myst $nick $address TOPIC $chan : $+ $1-
+on 2:mode:#:LNK.myst $nick $address MODE $chan $1-
+on *:notice:*:?: LNK.rutoto $nick $address NOTICE $1-
+on *:text:*:?: LNK.rutoto $nick $address PRIVMSG $1-
+on *:action:*:?: LNK.rutoto $nick $address PRIVMSG $chr(1) $+ ACTION $1- $chr(1)
+
+on *:input:#: {  if ($left($1,1) != / ) { LNK.st : $+ $me PRIVMSG $active : $+ $1- }
+  else if ($left($1,3) == /me ) { LNK.st : $+ $me PRIVMSG $active : $+ $chr(1) $+ ACTION $2- $chr(1) }
+}
+
+on *:input:?: {  if ($left($1,1) != / ) { LNK.st : $+ $me PRIVMSG $active : $+ $1- }
+  else if ($left($1,3) == /me ) { LNK.st : $+ $me PRIVMSG $active : $+ $chr(1) $+ ACTION $2- $chr(1) }
+}
+
+#LNKlog end
+
+alias LNK.arrete {
+  if ( %linked != $true ) { LNK.stoplog | echo 3 -a * poupees stoppé } 
+  else { LNK.termine }
+}
+
+menu menubar {
+  Super Poupees
+  .Lancer les poupees: LNK.initlink
+  .Stopper les poupees: LNK.arrete
+  .-
+  .Configurer: LNK.magconfig
+}
+
+menu channel {
+  poupees
+  .Mirroriser modes et topic de #: topic # | mode #
+  .Mirroriser la totalité de #: who # | topic # | mode #
+}
+
+alias LNK.stoplog .timerlog off | .disable #LNKlog | unset %accelere | .rlevel -r 2
+
+#LNKOffline off
+
+alias LNK.addni  set %temp1 $right($1,$calc($len($1)-1)) | aline -l @LNKTelnet1 %temp1
+
+alias LNK.remni {
+  set %temp1 $right($1,$calc($len($1)-1))
+  %i = 1
+  :next
+  if ( %i > $line(@LNKTelnet1,0,1)) goto fin2
+  %temp = $line(@LNKTelnet1,%i,1))
+  if ( %temp1 == %temp )  goto fin
+  inc %i
+  goto next
+  :fin
+  dline -l @LNKTelnet1 %i
+  :fin2
+}
+
+alias mjj {
+  set %i 1
+  while ( %i <= $line(@LNKTelnet1,0,1) ) {
+    sockwrite -n LNKTelnet1 : $+ $line(@LNKTelnet1,%i,1) JOIN $active
+    inc %i
+  }
+}
+
+alias d /sockwrite -n LNKTelnet1 : $+ $1 PRIVMSG %SP.linkchan : $+ $2- | echo 12 -a $chr(91) $+ $left($time,5) $+ $chr(93) < $+ $1 $+ > $2-
+alias m /sockwrite -n LNKTelnet1 : $+ $1 MODE %SP.linkchan $3 $2 
+alias no  /sockwrite -n LNKTelnet1 : $+ $1 NOTICE %SP.linkchan : $+ $2- | echo 12 -a $chr(91) $+ $left($time,5) $+ $chr(93) - $+ $1 $+ - $2- 
+alias jj  /sockwrite -n LNKTelnet1 : $+ $1 JOIN : $+ %SP.linkchan
+alias pp  /sockwrite -n LNKTelnet1 : $+ $1 PART %SP.linkchan $iif($1 != $null,: $+ $2-)
+alias mm  /sockwrite -n LNKTelnet1 : $+ $1 PRIVMSG %SP.linkchan :ACTION $2-  | echo 12 -a $chr(91) $+ $left($time,5) $+ $chr(93) * $1 $2-  
+alias qq  /sockwrite -n LNKTelnet1 : $+ $1 QUIT : $+ $iif($1 == $null,Leaving,$2-)
+alias kk /sockwrite -n LNKTelnet1 : $+ $1 KICK %SP.linkchan $2 : $+ $3-
+
+alias LNK.envoie { 
+  ;  if (%curline == 1 ) { unset %titlebar | unset %fmodes | unset %ftopic | return }
+  ; echo 4 -a $1-
+  if ( $2 == nick ) { LNK.addni : $+ $3 }
+  else if ( $3 == quit ) { LNK.remni $2 }
+  else if ( $3 == nick ) { LNK.remni $2 | LNK.addni $4 }
+  else if ( $2 == talk ) { %me = $4
+    sockwrite -n LNKTelnet1 NICK Information 1 2 Global service.poupees.org irc.poupees.org :Service d'information
+    sockwrite -n LNKTelnet1 :Information NOTICE $me :Holo-Log effectué par  $+ $4 $+  $5-
+  }
+
+  if ( $2 == : $+ %me && $3 == nick ) { set %temp %me | set %me $right($4,$calc($len($4)-1))
+    sockwrite -n LNKTelnet1 :Information NOTICE $me :Attention!  $+ %temp $+  est devenu  $+ %me $+ 
+  }
+  if ( $2 == : $+ %me && $3 == privmsg && $asc($4) != 35 ) { echo 2 $4 $chr(91) $+ $time $+ $chr(93) < $+ $right($2,$calc($len($2)-1)) $+ > $right($5-,$calc($len($5-)-1)) }
+  elseif ( ( $3 == notice || $3 == privmsg ) && $4 == %me ) { sockwrite -n LNKTelnet1 $2 $3 $me $5- }
+  elseif ($asc($4) == 35) { sockwrite -n LNKTelnet1 $2 $3 %SP.linkchan $5- }
+  else sockwrite -n LNKTelnet1 $2 $3 $4 $5- 
+  if ( $2 == : $+ %me && $3 == join ) { sockwrite -n LNKTelnet1 : $+ $me JOIN : $+ %SP.linkchan | sockwrite -n LNKTelnet1 :irc.poupees.org MODE $4 -o $me }
+}
+
+alias LNK.termine sockclose LNKTelnet1 | .rlevel -r 2 | unset %linked | LNK.stoplog | set %curline 1 | .disable #LNKOffline | window -c @LNKTelnet1 | disable #LNKOuvretel | .timerping off
+#LNKOffline end

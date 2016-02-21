@@ -1,0 +1,25 @@
+;Voici un Misc semblable a celui posté par Qwuare le 22 octobre passé, mais cette fois ci,
+;avec /run shutdown [-i | -l | -s | -r | -a] [-f] [-m \\nom_ordinateur] [-t xx] ;[-c "commentaire"]
+
+Eteind l'ordinateur avec un délai de 20 secondes: /run shutdown -ts 20
+
+Redémarre l'ordinateur avec un délai de 20 secondes: /run shutdown -tr 20
+
+Fermé la session en cour d'utilisation: /run shutdown -l
+(Ne peu être utilisé avec -m)
+
+Annulé une arrêt de l'ordinateur: /run shutdown -a
+
+Redémarrer/éteindre un ordinateur distant, exemple: /run shutdown -m \\WORKGROUP65
+
+Définie le délai de la mise or tension de l'ordinateur: /run shutdown -t [xx]
+
+Met un commentaire avant la fermeture de l'ordinateur: /run shutdown -c "Salut!!!"
+(maximum de 127 lettres/espaces)
+
+;C'est déjà tout.
+;Je ne suis pas responsable en quoi que ce soit de l'utilisation de ses commandes.
+
+;COMPATIBLE AVEC "XP" SEULEMENT, POUR LES AUTRES OS, ALLER VOIR LE MISC SUR RUNDLL32.EXE.
+
+;PsYk0p4t, Merci.

@@ -1,0 +1,75 @@
+;;;;;Liste de commande Rundll32 ainsi que leur utilité;;;;;
+
+On peut penser que /run Rundll32.exe est vraiment une commande à bannir, mais, elle peut "peut-être" servir à quelqu'un.
+
+;;;;Pour éxécuter ces commandes avec mIRC :
+
+/run Rundll32.exe [Commande]
+
+(Cela foncrionne aussi avec Démarrer > Exécuter > Repertoire de Windoze [Commande]
+
+
+
+;;;;Liste des commandes :
+
+
+
+user,exitwindows                                Quitte Windows
+
+
+user,wnetconnectdialog                          Ouvre la boite de dialogue 
+                                                "se connecter à un lecteur réseau" 
+
+user,wnetdisconnectdialog                       Ouvre la boite de dialogue 
+                                                "se déconnecter du lecteur réseau" 
+
+user,disableoemlayer 				Arrête l'ordinateur 
+
+
+user,repaintscreen 				Actualise l'affichage (comme F5) 
+
+
+user,setcursorpos 				Place le curseur en haut à gauche 
+
+
+diskcopy,DiskCopyRunDll 			Ouvre la boite de dialogue Copie d'une disquette
+
+ 
+rnaui.dll,RnaWizard /1 				active la boite de dialogue de connexion au réseau (/1 pour éviter l'écran de démarrage) 
+
+
+shell,shellexecute 				ouvre l'explorateur 
+
+
+shell32,OpenAs_RunDLL 				active la boite de dialogue Ouvrir avec 
+
+
+shell32,SHFormatDrive 				active la boite de dialogue Formater la disquette 
+
+
+shell32,ShellAboutA 				active la boite de dialogue enregistrer/ressources 
+
+
+shell32,SHExitWindowsEx 0 			redémarre Windows 98 
+
+
+shell32,SHExitWindowsEx 1 			quitte Windows 98 
+
+
+shell32,SHExitWindowsEx -1 			redémarre l'explorateur de Windows 98 
+
+
+Shell32,Control_RunDLL 				ouvre le Panneau de configuration 
+
+
+Shell32,Control_RunDLL desk.cpl 		ouvre le module d'affichage du Panneau de configuration 
+
+
+Shell32,Control_RunDLL main.cpl@		désactive le module <n>du Panneau de configuration
+< 						démarre MAIN CPL
+0 = souris; 1 = clavier;
+2 = imprimantes; 3 = polices; 4 = énergie 
+>
+
+
+;;;;;;;; Liste des commande de Rundll32 par Qwuare ;;;;;;;;

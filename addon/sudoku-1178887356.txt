@@ -1,0 +1,634 @@
+;******************************
+;Sudoku codé par Wims & ArKanis
+; Créé le 01/01/06
+; Version 3.0
+;******************************
+
+alias sudoku {
+  if (!$1) { pre | return }
+  if ($window(@sud)) { var %x = $window(@sud).x, %y = $window(@sud).y | window -c @sud }
+  if ($hget(Sudoku)) hfree Sudoku
+  if ($hget(SudokuTemp)) hfree SudokuTemp
+  var %t = $iif($1 isnum 1-,$1,1)
+  hadd -m SudokuTemp Difficulte $iif(%t isnum 1-4,%t,1)
+  if ((%x) && (%y)) window -dp +bx @sud %x %y 280 298
+  else window -Cdp +bx @sud -1 -1 280 298
+  .timersudoctime off | drawrect -fr @sud 16777215 1 0 0 300 300
+  drawfill -r @sud 69857 16777215 200 200 
+  drawline -r @sud 0 1 1 232 500 232 | drawline -r @sud 0 1 1 50 500 50
+  drawline -r @sud 0 1 1 80 500 80 | drawline -r @sud 0 1 244 20 244 500
+  drawline -r @sud 0 1 32 20 32 500 | drawline -r @sud 0 1 62 20 62 500
+  drawline -r @sud 0 2 275 20 275 500 | drawline -r @sud 0 1 1 141 500 141
+  drawline -r @sud 0 1 1 171 500 171 | drawline -r @sud 0 2 2 293 500 293
+  drawline -r @sud 0 1 123 20 123 500 | drawline -r @sud 0 1 153 20 153 500
+  drawline -r @sud 0 1 214 20 214 500 | drawline -r @sud 255 2 93 21 93 291
+  drawline -r @sud 0 1 1 262 500 262 | drawline -r @sud 255 2 2 202 273 202
+  drawline -r @sud 255 2 184 21 184 291 | drawline -r @sud 255 2 2 111 273 111
+  drawrect -r @sud 0 2 1 19 291 291 | var %t = $hget(SudokuTemp,Difficulte)
+  drawline -r @sud 0 1 0 19 3 19
+  drawfill -r @sud 16776138 0 200 10
+  drawtext -r @sud 255 verdana 10 2 2 [Sudoku] [Level] : $replace(%t,4,Expert,3,Difficile,2,Moyen,1,Facile)
+  sudogen
+}
+
+alias -l dtime {
+  if (!$window(@sud)) { .timersudoctime off | return }
+  drawrect -rnf @sud 16776138 1 142 2 180 10
+  hadd -m sudokutemp ctimep $calc($ctime - $$hget(SudokuTemp,Ctime))
+  drawtext -nr @sud $rgb($color(7)) verdana 10 175 2 $duration($calc($ctime - $$hget(SudokuTemp,Ctime)))
+  drawdot @sud
+}
+
+alias -l depsud {
+  window @sud $calc($mouse.dx - $1) $calc($mouse.dy - $2) 280 298
+  if ($mouse.key & 1) .timerdepsud 0 0 depsud $1-
+}
+
+ON *:KEYDOWN:@sud:*:{
+  if ($keychar isin 0P) { pausesud | return }
+  elseif ($hget(sudokutemp,coord) != $null) && (nonfixe isin $hget(sudoku,$hget(sudokutemp,coord))) && ($hget(sudoku,$hget(sudokutemp,coord))) && ($keychar isin +-) {
+    var %h = $hget(sudokutemp,$hget(sudokutemp,coord)) ,%r = $iif(!%h,1,$replace(%h,sur,2,incertain,3))
+    $iif($keychar == +,inc,dec) %r | if (%r == $iif($keychar == +,4,0)) var %r = $iif($keychar == +,1,3)
+    modifétat $replace(%r,1,0,2,sur,3,incertain)
+    return
+  }
+  var %c = $hget(SudokuTemp,coord) $iif($istok(37.38,$keyval,46),-,+) $iif($istok(37.39,$keyval,46),10,1) ,%a = $iif($len(%c) == 1,$+(0,%c),%c)
+  if ($keychar isnum 1-9) sudonum $$hget(SudokuTemp,Case) $keychar
+  elseif ($istok(8-46,$keyval,45)) sudonum $$hget(SudokuTemp,Case)
+  elseif ($keyval == 13) && ($hget(SudokuTemp,coord) != $null) readyd $hget(SudokuTemp,coord)
+  elseif ($istok(37.38.39.40,$keyval,46)) && ($left(%a,1) isnum 0-8) && ($right(%a,1) isnum 0-8) {
+    var %old = $hget(sudokutemp,coord)
+    hadd -m SudokuTemp Coord %a
+    if ($hget(SudokuTemp,case) != %old) coorf %old 16777215
+    if ($hget(SudokuTemp,case) == %a) return
+    coorf %a $iif(nonfixe isin $hget(Sudoku,%a) || $hget(Sudoku,%a) == $null,65280,37632) 
+  }
+}
+
+menu @sud {
+  dclick : if ($mouse.y isnum 0-19) depsud $calc($mouse.dx - $window(@sud).x)) $calc($mouse.dy - $window(@sud).y)
+  mouse : dessc $mouse.x $mouse.y
+  leave : window @sud $window(@sud).x $window(@sud).y 280 298
+  sclick : if ($mouse.y isnum 0-19) { depsud $calc($mouse.dx - $window(@sud).x)) $calc($mouse.dy - $window(@sud).y) } | else readyd $mouse.x $mouse.y
+  uclick : .timerdepsud off
+  $iif(((nonfixe isin $hget(Sudoku,$checkpos($mouse.x,$mouse.y))) && ($checkpos($mouse.x,$mouse.y) != $null)),$mo($ifmatch))  
+  .$iif($hget(SudokuTemp,$hget(SudokuTemp,Pos)) == sur,$style(1)) Case sûre:modifétat sur
+  .$iif($hget(SudokuTemp,$hget(SudokuTemp,Pos)) == incertain,$style(1)) Case incertaine:modifétat incertain
+  .$iif(!$hget(SudokuTemp,$hget(SudokuTemp,Pos)),$style(1)) Case normale:modifétat 0
+  Changer la difficulté
+  .$iif(((!$hget(SudokuTemp,Difficulte)) || ($hget(SudokuTemp,Difficulte) == 1)),$style(1)) Facile:sudoku 1
+  .$iif($hget(SudokuTemp,Difficulte) == 2,$style(1)) Moyen:sudoku 2
+  .$iif($hget(SudokuTemp,Difficulte) == 3,$style(1)) Difficile:sudoku 3
+  .$iif($hget(SudokuTemp,Difficulte) == 4,$style(1)) Expert:sudoku 4
+  $iif($hget(SudokuTemp,Aide),$style(1)) Faciliter le remplissage de la grille:hadd -m SudokuTemp Aide $iif($hget(SudokuTemp,Aide),0,1)
+  Nouvelle grille:{
+    if ((($hget(sudoku)) && ($?!="Etes-vous sûr(e) de vouloir commencer $crlf $+ une nouvelle grille et ainsi quitter cette partie ?")) || (!$hget(sudoku))) {
+      sudogen | .timersudoctime off | drawrect -f @sud 0 1 160 2 100 10
+      if ($hget(SudokuTemp,Soluce)) hdel SudokuTemp Soluce
+    }
+  }
+  $iif($hget(SudokuTemp,Soluce) || !$hget(sudoku),$style(2)) Donner la solution:if ($?!="Etes-vous sûr(e) de vouloir avoir la solution ?") sudocorrect
+  -
+  Menu principal { window -c @sud | .hfree -w Sudoku* | .timersudoctime off | sudoku }
+  Meilleurs scores:msud
+  Règles du jeu:sudaide
+  Comment jouer ?:htp?
+  -
+  Fermer:window -c @sud | hfree -w Sudoku* | .timersudoctime off
+  -
+  Unload
+  .Supprimer:{
+    if (!$?!="Voulez-vous vraiment supprimer le jeu ? Non pour annuler") {
+      window -c @sud | window -c @menu | window -c @aidesud | window -c @tuto | window -c @msud
+      hfree -w Sud*
+      .timersudoctime off
+      .remove $shortfn($script)
+      .remove $shortfn($$findfile($scriptdir,SudoTuto.jpg,1))
+      noop $findfile($scriptdir,sudosco?.sud,0,.remove $shortfn($1-))
+      noop $input(Le sudoku a bien été supprimé et déchargé)
+      .unload -rs $qt($script)
+    }
+  }
+  .Unload:{
+    if (!$?!="Confirmer le déchargement ? Non pour annuler") return
+    window -c @sud | window -c @menu | window -c @aidesud | window -c @tuto | window -c @msud
+    hfree -w Sudoku* | .timersudoctime off | noop $input(Le sudoku a bien été déchargé)
+    .unload -rs $shortfn($script)
+  }
+}
+
+alias -l sudogen {
+  if (!$window(@sud)) return
+  if ($hget(Sudoku)) hfree $ifmatch
+  var %ligne = 0
+  while %ligne <= 8 {
+    var %colonne = 0
+    while %colonne <= 8 {
+      coorf $+(%colonne,%ligne) eff
+      inc %colonne
+    }
+    inc %ligne
+  }
+  if ($hget(Sudoku,0).item) coorf 00 $iif(nonfixe isin $hget(sudoku,00) || $hget(sudoku,00) == $null,65280,37632)
+  hadd -m SudokuTemp Ctime $ctime
+  hadd -m SudokuTemp coord 00
+  if ($isalias(dtime)) {
+    .timersudoctime 0 1 dtime
+    dtime
+  }
+  var %ticks = $ticks, %r = $r(100,120), %s = 0, %l, %t = 1, %a = 123456789, %sol = $+(%a,;,$seq(0,X,2,9))
+  while (%t < 9) var %a = $+($right(%a,-1),$left(%a,1)), %sol = $puttok(%sol,%a,$calc($iif($calc($calc(%t *3) % 8),$v1,8) +1),59), %t = %t + 1
+  while (%s <= %r) var %n = $r(8,16), %l = $instok(%l,%n,-1,32), %s = %s + %n
+  var %i = 1, %m = $numtok(%l,32)
+  while (%i <= %m) {
+    var %t = 1, %n = $gettok(%l,%i,32)
+    while (%t <= %n) var %sol = $echange.sud(%sol), %t = %t + 1
+    if ($r(0,10) <= 6) var %sol = $permut.sud(%sol)
+    var %sol = $transp.sud(%sol), %i = %i + 1
+  }
+  var %t = 1, %sol = $remove(%sol,;), %l = $hget(SudokuTemp,Difficulte)
+  hadd -m SudokuTemp Cheat %sol
+  if (%l == 2) var %n = $r(46,48)
+  elseif (%l == 3) var %n = $r(49,51)
+  elseif (%l == 4) var %n = $r(52,54)
+  else var %n = $r(42,45)
+  if (%n > 81) return
+  while (%t <= %n) {
+    var %r = $r(1,81), %s = $+(^,$chr(40),.,$chr(123),$calc(%r - 1),$chr(125),$chr(41))
+    if ($mid(%sol,%r,1)) var %sol = $regsubex(%sol,$+(%s,(.)),\t0), %t = %t + 1
+  }
+  var %t = 0
+  while (%t <= 80) {
+    var %c = $int($calc(%t / 9) % 9), %l = $calc(%t % 9)
+    if ($mid(%sol,$calc(%t +1),1)) s.a $+(%l,%c) $ifmatch
+    inc %t
+  }
+}
+
+alias -l s.a {
+  hadd -m Sudoku $$1-2
+  coorf $1 0 $$2
+}
+alias -l seq {
+  ;texte subtext from(num) to(num)
+  ;ex $seq(varX,X,1,10) = var1;var2;var3;var4;var5;var6;var7;var8;var9;var10
+  if (($3 !isnum) || ($4 !isnum) || (; isin $2) || ($2 == $null)) return
+  return $left($regsubex($str($+($1,;),$calc($4 - $3 +1)),$+(/,$2,/g),$calc($3 + \n)),-1)
+}
+alias -l transp.sud {
+  var %t = 1, %sol
+  while (%t <= 9) {
+    var %i = 0
+    while (%i < 9) var %sol = $+(%sol,$mid($1,$calc(%t + %i * 10),1)), %i = %i + 1
+    var %sol = $+(%sol,;)
+    inc %t
+  }
+  return $left(%sol,-1)
+}
+alias -l echange.sud {
+  var %t = 1, %r = $r(0,2), %m = $calc(%r *3+1), %n = $calc(%r *3+3), %r = $r(%m,%n), %r2 = %r
+  while (%r == %r2) var %r2 = $r(%m,%n)
+  return $puttok($puttok($1,$gettok($1,%r2,59),%r,59),$gettok($1,%r,59),%r2,59)
+}
+alias -l permut.sud {
+  var %r = $r(1,9), %r2 = %r
+  while (%r == %r2) var %r2 = $r(1,9)
+  return $replacex($1,%r,%r2,%r2,%r)
+}
+
+alias -l sudonum {
+  if (!$regex($1,^[0-8]{2}$)) return
+  var %old = $hget(SudokuTemp,Coord)
+  if (!$regex($2,^[1-9]{1}$)) {
+    if ($regex($hget(Sudoku,$1),nonfixe)) {
+      hdel Sudoku $1
+      coorf $1 eff
+      if ($hget(SudokuTemp,Case)) hdel SudokuTemp Case
+      coorf $hget(sudokutemp,coord) 64512
+    }
+    return
+  }
+  var %ligne = $right($1,1), %colonne = $left($1,1), %case = $1
+  if ($hget(SudokuTemp,Aide)) {
+    var %t = 0
+    while %t <= 8 {
+      if (%t != %ligne) {
+        if ($gettok($hget(Sudoku,$+(%colonne,%t)),1,32) == $2) {
+          tokenize 32 $colign($+(%colonne,%t))
+          var %t = $input(La case de la $1 colonne sur la $3 ligne qui est sur la même colonne porte le même numéro !,o)
+          return
+        }
+      }
+      if (%t != %colonne) {
+        if ($gettok($hget(Sudoku,$+(%t,%ligne)),1,32) == $2) {
+          tokenize 32 $colign($+(%t,%ligne))
+          var %t = $input(La case de la $1 colonne sur la $3 ligne qui est sur la même ligne porte le même numéro !,o)
+          return
+        }
+      }
+      inc %t
+    }
+    var %debligne = %ligne, %debcolonne = %colonne
+    while ($round($calc(%debligne /3),0) != $calc(%debligne / 3)) dec %debligne
+    while ($round($calc(%debcolonne /3),0) != $calc(%debcolonne / 3)) dec %debcolonne
+    var %c.ligne = 0
+    while (%c.ligne <= 2) {
+      var %c.colonne = 0, %t.ligne = $calc(%c.ligne + %debligne)
+      while (%c.colonne <= 2) {
+        var %t.colonne = %c.colonne + %debcolonne
+        if ((%case != $+(%t.colonne,%t.ligne)) && ($gettok($hget(Sudoku,$+(%t.colonne,%t.ligne)),1,32) == $2)) {
+          tokenize 32 $colign($+(%t.colonne,%t.ligne))
+          var %t = $input(La case de la $1 colonne sur la $3 ligne qui est dans le même carré porte le même numéro !,o)
+          return
+        }
+        inc %c.colonne
+      }
+      inc %c.ligne
+    }
+  }
+  if ($hget(SudokuTemp,%case)) hdel SudokuTemp $hget(SudokuTemp,Case) 
+  hadd -m Sudoku $1-2 nonfixe
+  coorf $1 15767584 $2
+  if (%old) coorf $ifmatch 16777215
+  hadd -m SudokuTemp Coord $1
+  .timer -m 1 50 coorf $1 64512
+  if ($hget(SudokuTemp,Case)) hdel SudokuTemp Case
+}
+
+alias -l sudocheck {
+  if (!$hget(Sudoku)) return
+  if ($hget(SudokuTemp,Soluce)) return
+  var %ligne = 0, %fautes = 0
+  while (%ligne <= 8) {
+    var %colonne = 0
+    while (%colonne <= 8) {
+      var %case = $+(%colonne,%ligne)
+      if ($regex($hget(Sudoku,%case),nonfixe)) {
+        var %correc = $sudosoluce(%case)
+        if ($gettok($hget(Sudoku,%case),1,32) != %correc) inc %fautes
+      }
+      inc %colonne
+    }
+    inc %ligne
+  }
+  if (%fautes) {
+    var %t = $input(Il y a %fautes $+(faute,$iif(%fautes >= 2,s)))
+    if ($hget(sudokutemp,case) != $null || $hget(sudokutemp,coord) != $null) { coorf $v1 16777215 | hdel sudokutemp coord | hdel sudokutemp case }
+    halt
+  }
+  else {
+    .timersudoctime off
+    var %h = $+(sudsco,$iif($hget(sudokutemp,difficulte),$replacex($ifmatch,1,Facile,2,Moyen,3,Difficile,4,Expert),facile)) ,%t = $hget(sudokutemp,ctimep)
+    hadd -m %h $+(%t,/,<<<¿>>>) 1
+    mstri $iif($hget(sudokutemp,difficulte),$replacex($ifmatch,1,Facile,2,Moyen,3,Difficile,4,Expert),facile)
+    if ($hfind(%h,$+(%t,/,<<<¿>>>))) {
+      :back
+      var %n = $input(Bravo !! Tu as fait un nouveau record de $+($duration(%t),$chr(44)) inscris ton pseudo ou clique sur Cancel pour ne pas ajouter le record :,et,Nouveau record !)	
+      if (!%n) goto lu
+      elseif ($len(%n) > 10) goto back 
+      hadd -m %h $+(%t,/,%n) 1
+      :lu
+      if ($input(Voulez-vous passer au niveau supérieur,y)) { var %ga? on | goto sup }
+      else { hadd -m SudokuTemp Soluce 1 | .timersudoctime off | hfree -w sudoku* }
+    }
+    elseif ($?!="Bien joué ! Vous avez fini ce sudoku en $+($duration(%t),.) Voulez-vous passer au niveau supérieur ?") { var %ga? on | goto sup }
+    else { .timersudoctime off | hfree -sw sudoku* | coorf $hget(sudokutemp,coord) 16777215 }
+    :sup 
+    hdel -m %h $+(%t,/,<<<¿>>>)
+    if (!$isdir(Sudoku)) mkdir Sudoku
+    hsave %h sudoku\ $+ %h $+ .sud
+    mstri $iif($hget(sudokutemp,difficulte),$replacex($ifmatch,1,Facile,2,Moyen,3,Difficile,4,Expert),facile)
+    if (!%ga?) return 
+    var %o = $calc($hget(SudokuTemp,Difficulte) +1) 
+    if (%o == 5) var %o = 4
+    elseif (%o !isnum 2-4) var %o = 2
+    sudoku %o
+  }
+}
+
+alias mstri {
+  var %h = $+(sudsco,$1) ,%a 1 ,%b = $hget(%h,0).item ,%c = 1
+  while (%a <= %b) { var %stock = %stock $replace($hget(%h,%a).item,$chr(47),$chr(46)) | inc %a }
+  var %sort = $sorttok(%stock,32,n)
+  if ($window(@msud)) {
+    drawrect -fn @msud 15 0 2 45 80 90
+    drawrect -fn @msud 15 0 90 45 150 90
+  }
+  if ($hget(%h)) hfree %h
+  while (%c <= $iif($numtok(%stock,32) > 6,6,$ifmatch)) {
+    if ($window(@msud)) {
+      drawcn @msud verdana 12 1 $calc(47 + (%c - 1) * 14) $token($token(%sort,%c,32),2,46) 
+      .drawcn @msud verdana 12 1 $calc(47 + (%c - 1) * 14) $duration($token($token(%sort,%c,32),1,46))
+    }
+    hadd -m %h $+($token($token(%sort,%c,32),1,46),/,$token($token(%sort,%c,32),2,46))
+    inc %c
+  }
+  if ($window(@msud)) drawdot @msud
+}
+
+alias -l sudosoluce {
+  if (!$hget(SudokuTemp,Cheat)) return
+  if (!$regex($1,^[0-8]{2}$)) return
+  return $mid($hget(SudokuTemp,Cheat),$calc($right($1,1) * 9 + $left($1,1) +1),1)
+}
+alias -l sudocorrect {
+  hadd -m SudokuTemp Soluce 1
+  var %fautes = 0, %ligne = 0, %justes = 0, %vides = 0
+  while (%ligne <= 8) {
+    var %colonne = 0
+    while (%colonne <= 8) {
+      var %case = $+(%colonne,%ligne), %correct = $sudosoluce(%case), %r = $hget(Sudoku,%case)
+      if (nonfixe isin %r) {
+        if ($gettok(%r,1,32) != %correct) { inc %fautes | coorf %case 14687456 %correct | dcroix %case line }
+        else { coorf %case 15767584 %correct | inc %justes | dcroix %case rect }
+      }
+      if (!%r) { inc %vides | coorf %case 255 %correct }
+      hadd -m Sudoku %case %correct
+      inc %colonne
+    }
+    inc %ligne
+  }
+  var %t = $input(Il y avait %fautes $+(faute,$iif(%fautes >= 2,s),$chr(44)) %justes $+(juste,$iif(%justes >= 2,s),$chr(44)) %vides $+(vide,$iif(%vides >= 2,s)),o)
+  .timersudoctime off
+  hfree -w sudoku*
+}
+
+alias -l mo {
+  var %c = $left($1,1), %l = $right($1,1), %t = $int($calc(%c / 3 +1))
+  if (%l isnum 3-5) inc %t 3
+  elseif (%l isnum 6-8) inc %t 6
+  return Carré %t - Case $calc(%c % 3+(%l % 3)*3+1)
+}
+
+alias -l coorf {
+  if (!$window(@sud)) return
+  if (!$regex($1,^[0-8]{2}$)) return
+  var %x $token(3.33.63.94.124.154.185.215.245,$calc($left($1,1) + 1),46)
+  var %y $token(21.51.81.112.142.172.203.233.263,$calc($right($1,1) + 1),46)
+  if ($2 == eff) { drawrect -f @sud 0 1 %x %y 29 29 | return }
+  if (!$3) { drawrect -r @sud $2 1 %x %y 29 29 }
+  else {
+    drawrect -f @sud 0 1 %x %y 29 29
+    drawtext -r @sud $2 verdana 20 $calc(%x + 8) $calc(%y + 1) $3
+    if ($hget(SudokuTemp,%case)) hdel SudokuTemp %case
+    if ($hget(SudokuTemp,Case) != $null) && ($4 != flag) {
+      .timer -m 1 0 coorf $hget(sudokutemp,case) 16777214 
+      hdel sudokutemp case
+    }
+    if ($hget(Sudoku,0).item == 81) sudocheck
+  }
+}
+alias modifétat {
+  var %case = $hget(SudokuTemp,coord)
+  coorf %case $replacex($1,sur,56320,incertain,8355711,0,15767584) $iif($hget(Sudoku,%case),$ifmatch,0) flag
+  hadd -m SudokuTemp %case $iif(!$1,0,$1)
+  if ($hget(sudokutemp,coord) != $null) coorf $ifmatch 16777215 
+  hadd -m sudokutemp coord %case
+  .timer -m 1 50 coorf %case 645122
+}
+
+alias -l growsud {
+  window @sud $window(@sud).x $window(@sud).y 280 320
+  drawline -r @sud 0 1 0 293 3 293
+  drawfill -r @sud 13816530 0 150 296
+  drawrect -r @sud 0 1 1 295 100 20
+}
+
+alias -l dessc {
+  ; if ($2 >= 293) growsud
+  ; else window @sud $window(@sud).x $window(@sud).y 280 298
+  if ($hget(sudokutemp,pause)) return
+  if ($1 isnum 3-275 && $2 isnum 21-293 && $hget(sudoku)) { 
+    var %a = $checkpos($1,$2)
+    if ($hget(SudokuTemp,Coord) == %a) return
+    if ((($hget(SudokuTemp,Case) != $hget(SudokuTemp,Coord)) || ($hget(SudokuTemp,Case) == %a)) && ($hget(SudokuTemp,Coord) != $null)) {
+      coorf $ifmatch 16777215
+      hdel SudokuTemp Coord    
+    }
+    if ($hget(SudokuTemp,Case) == %a) return
+    if (nonfixe isin $hget(Sudoku,%a)) || ($hget(sudoku,%a) == $null) { coorf %a 65280 | hadd -m SudokuTemp Coord %a }
+    else { coorf %a 37632 | hadd -m SudokuTemp Coord %a }
+  }
+  elseif ($hget(SudokuTemp,Case) != $hget(SudokuTemp,Coord)) {
+    if ($hget(SudokuTemp,Coord)) { coorf $ifmatch 16777215 | hdel SudokuTemp Coord }
+  }
+}
+
+alias -l readyd {
+  if (%limite) return
+  set -u1 %limite 1
+  if ($hget(sudokutemp,pause)) return 
+  var %a = $iif(!$2,$1,$checkpos($1,$2))
+  if (((nonfixe !isin $hget(Sudoku,%a)) && ($hget(Sudoku,%a))) || ($hget(SudokuTemp,Case) == %a)) || (!$hget(sudoku)) return
+  if ($hget(SudokuTemp,Case) != $null) coorf $ifmatch 16777215
+  if ($hget(sudokutemp,coord) != $null) coorf $ifmatch 16777215
+  hadd -m SudokuTemp Case %a
+  coorf %a 255
+}
+
+alias -l checkpos {
+  var %colonne = 0, %ligne = 0, %dx = $calc($1 -4), %dy = $calc($2 - 21)
+  if ((%dx < 0) || (%dy < 0)) return
+  while %dx !isnum 0-30 { var %dx = $calc(%dx - 30) | inc %colonne }
+  while %dy !isnum 0-30 { var %dy = $calc(%dy - 30) | inc %ligne }
+  hadd -m SudokuTemp Pos $+(%colonne,%ligne)
+  if ($regex($hget(SudokuTemp,Pos),^[0-8]{2}$)) return $hget(SudokuTemp,Pos)
+}
+on *:close:@sud:hfree -w Sudoku* | .timersudoctime off
+menu @aidesud {
+  sclick : window -c @aidesud
+}
+
+alias -l sudaide {
+  if ($window(@aidesud)) window -c @aidesud
+  window -Cdp +bx @aidesud -1 -1 293 140
+  drawrect -f @aidesud 0 1 0 0 300 300
+  drawtext @aidesud 4 verdana 20 70 2 Aide du Sudoku
+  drawtext @aidesud 1 verdana 15 15 30 Le but est de remplir chaque case
+  drawtext @aidesud 1 verdana 15 17 50 par un chiffre de 1 à 9. Attention :
+  drawtext @aidesud 1 verdana 15 18 70 chaque carré de 9 cases, chaque
+  drawtext @aidesud 1 verdana 15 15 90 ligne et chaque colonne ne doivent
+  drawtext @aidesud 1 verdana 15 6 110 comporter deux fois le même chiffre
+}
+
+alias -l colign {
+  if (!$window(@sud)) return
+  if (!$1) return
+  var %a = $left($1,1) ,%b = $right($1,1)
+  return $calc(%a + 1) $+ $iif(!%a,ère,ème) colonne $calc(%b + 1) $+ $iif(!%b,ère,ème) ligne
+} 
+
+alias -l dcroix {
+  if (!$window(@sud)) return
+  if (!$2) return
+  var %x $token(3.33.63.94.124.154.185.215.245,$calc($left($1,1) + 1),46)
+  var %y $token(21.51.81.112.142.172.203.233.263,$calc($right($1,1) + 1),46)
+  draw $+ $2 $iif($2 == rect,-er,-r) @sud $iif($2 == rect,15767584,14687456) 1 %x %y $iif($2 == rect,29,$calc(%x + 29)) $iif($2 == rect,29,$calc(%y + 29))
+  if ($2 == rect) return
+  drawline -r @sud 14687456 1 %x $calc(%y + 29) $calc(%x + 29) %y
+}
+
+alias pausesud {
+  if ($sock(sudo)) return
+  if ($hget(sudokutemp,pause)) {
+    hadd -m sudokutemp ctime $calc($ctime - $hget(sudokutemp,ctimep)) 
+    drawcopy @sudbf 0 0 300 300 @sud 2 19 | window -c @sudbf
+    hdel sudokutemp pause | .timersudoctime 0 1 $!iif($isalias(dtime),dtime,.timersudoctime off)
+  }
+  else {
+    hadd -m sudokutemp pause 1 | .timersudoctime off
+    window -hp @sudbf 500 500 500 500 | drawcopy @sud 2 19 300 300 @sudbf 0 0
+    var %a 21 ,%b 291 | while (%a <= %b) { drawline @sud 15 1 3 %a 274 %a | inc %a }
+    drawtext @sud 4 verdana 50 60 120 PAUSE
+  }
+}
+
+alias msud {
+  if ($window(@msud)) window -c @msud
+  window -Cdp +bx @msud -1 -1 247 140
+  drawrect -n @msud 1 0 0 0 60 20
+  drawrect -fn @msud 15 0 1 1 58 18
+  drawtext -n @msud 3 verdana 14 11 1 Facile 
+  drawrect -n @msud 1 0 61 0 60 20
+  drawtext -n @msud 7 verdana 14 68 1 Moyen 
+  drawrect -n @msud 1 0 122 0 60 20
+  drawtext -n @msud 4 verdana 14 128 1 Difficile 
+  drawrect -n @msud 1 0 183 0 60 20
+  drawtext -n @msud 6 verdana 14 189 1 Expert
+  drawrect -fn @msud 15 0 1 21 247 140
+  drawtext -n @msud 1 verdana 14 25 22 Nicks
+  drawtext -n @msud 1 verdana 14 135 22 Temps
+  drawline -n @msud 1 1 1 42 246 42
+  drawline -n @msud 1 1 85 42 85 200
+  hadd -m sudokutemp msud 1
+  mstri facile
+  drawdot @msud
+}
+
+alias drawcn if ($window($$1)) drawtext -n $$1 $$4 $$2 $$3 $int($calc(($iif($show,85,162) - $width($strip($$6-),$2,$3)) /2 $iif(!$show,+85))) $$5 $6- 
+
+menu @msud {
+  mouse : msud.m $mouse.x $mouse.y
+  sclick : window -c @msud 
+}
+alias msud.m {
+  if ($inrect($1,$2,1,1,247,20)) {
+    var %ic $int($calc($1 / 61 + 1)) | drawrect -fn @msud 15 0 $replacex(%ic,2,62,3,123,4,184) 1 58 18
+    drawtext -n @msud $replacex(%ic,1,3,2,7,3,4,4,6) verdana 14 $replacex(%ic,1,11,2,68,3,128,4,189) 1 $replacex(%ic,1,Facile,2,Moyen,3,Difficile,4,Expert) 
+    if ($hget(sudokutemp,msud) != %ic && $v1) {
+      drawrect -fn @msud 0 0 $replacex($ifmatch,2,62,3,123,4,184) 1 58 18 
+      drawtext -n @msud $replacex($ifmatch,1,3,2,7,3,4,4,6) verdana 14 $replacex($ifmatch,1,11,2,68,3,128,4,189) 1 $replacex($ifmatch,1,Facile,2,Moyen,3,Difficile,4,Expert) 
+    }
+    hadd -m sudokutemp msud %ic | drawdot @msud | mstri $replacex($ifmatch,1,Facile,2,Moyen,3,Difficile,4,Expert) 
+  }
+}
+
+alias pre {
+  if ($window(@sud)) window -a @sud
+  elseif ($window(@menu)) window -a @menu
+  else {
+    msud.hfree
+    window -w0Cdp +bx @menu -1 -1 150 283
+    drawrect -fn @menu 15 0 1 1 150 280
+    sudo.button 1 9 10 130 20 Facile
+    sudo.button 2 9 40 130 20 Moyen
+    sudo.button 3 9 70 130 20 Difficile
+    sudo.button 4 9 100 130 20 Expert
+    sudo.button 5 9 130 130 20 Meilleurs scores
+    sudo.button 6 9 160 130 20 Comment jouer
+    sudo.button 7 9 190 130 20 Règles du jeu
+    sudo.button 8 9 220 130 20 Fermer
+    sudo.button 9 9 250 130 20 Unload
+    drawdot @menu
+  }
+}
+on *:close:@menu:msud.hfree
+alias -l msud.hfree {
+  if ($hget(SudoButtons)) hfree $ifmatch
+  if ($hget(SudoBF)) hfree $ifmatch
+}
+alias -l sudo.button {
+  if (!$window(@menu)) return
+  var %g = 1, %r = ^[0-9]+ [0-9]+ [0-9]+$
+  if (!$regex($1-3,%r)) return
+  if ($isid) {
+    var %x = $2, %y = $3, %t = $hget(SudoButtons,0).item
+    while %t {
+      tokenize 32 $hget(SudoButtons,%t).data
+      if ($inroundrect(%x,%y,$2,$3,$4,$5,20,20)) break
+      dec %t
+    }
+    if (!%t) var %g = 0
+    else hadd -m SudoBF $1 $1-5
+  }
+  if (%g) {
+    if (!$regex($3-5,%r)) return
+    hadd -m SudoButtons $1 $1-
+    drawrect -dfnr @menu $iif($isid,11203252,16777215) 1 $2-5
+    drawrect -dnr @menu $iif($isid,0,7372687) 1 $2-5
+    if ($6-) drawtext -rn @menu $replacex($1,1,37632,2,32764,3,255,4,10223772,5,1,6,1,7,1,8,1)) Verdana 12 $calc($2 + ($4 - $width($6-,Verdana,12))/2) $calc($3 + 3) $6-  
+    return $1
+  }
+}
+menu @menu {
+  mouse:sudomouse $mouse.x $mouse.y
+  sclick:sudoclick $mouse.x $mouse.y
+}
+
+alias -l sudoclick {
+  var %id = $gettok($sudo.button(1,$1,$2),1,32)
+  if (%id isnum 1-4) { sudoku %id | window -c @msud | window -c @menu | window -c @aidesud | window -c @tuto }
+  elseif (%id == 8) { window -c @menu | msud.hfree }
+  elseif (%id == 5) msud
+  elseif (%id == 6) htp?
+  elseif (%id == 7) sudaide
+  elseif (%id == 9) {
+    var %c
+    if ($?!="Voulez-vous supprimer le jeu ? Non pour annuler") {
+      hfree -w sud*
+      var %c = 1
+      .remove $qt($script)
+      .remove $qt($$findfile($scriptdir,SudoTuto.jpg,1))
+      noop $findfile($scriptdir,sudosco?.sud,0,.remove $shortfn($1-))
+      noop $input(Le Sudoku a bien été déchargé et supprimé)
+    }
+    if ((%c) || ($input(Voulez-vous décharger ce jeu ?,y))) { 
+      .timersudoctime off
+      hfree -w sudoku*
+      window -c @sud | window -c @menu | window -c @msud | window -c @aidesud | window -c @tuto
+      if (!%c) noop $input(Le sudoku a bien été déchargé)
+      .unload -rs $qt($script)
+    }
+  }
+  if ($window(@menu)) drawdot @menu
+}
+
+alias -l sudomouse {
+  var %id = $gettok($sudo.button(1,$1,$2),1,32), %t = 1
+  if ($hget(SudoBF,0).item) {
+    while $hget(SudoBF,%t).item {
+      var %o = $ifmatch
+      if ($gettok(%o,1,32) != %id) {
+        var %h = $hget(SudoBF,%o)
+        hdel SudoBF %o
+        sudo.button %h $gettok($hget(SudoButtons,$gettok(%h,1,32)),6-,32)
+      }
+      else inc %t
+    }
+  }
+  drawdot @menu
+}
+
+alias htp? { 
+  window -aBCdhp +dL @tuto 0 0 882 600 
+  var %f = $findfile($scriptdir,SudoTuto.jpg,1)
+  if (%f) drawpic @tuto 0 0 $shortfn(%f)
+  else drawtext -or @tuto 0 Tahoma 20 264 290 Il manque le fichier SudoTuto.jpg !
+}
+
+menu @tuto {
+  sclick:window -c @tuto
+}
+
+on *:start: { var %n = hmake $!left($nopath($1-),-4) 100 $(|) hload $!left($nopath($1-),-4) $!qt($1-) | noop $findfile(sudoku\,*.sud,0,%n) }
+;End Of File

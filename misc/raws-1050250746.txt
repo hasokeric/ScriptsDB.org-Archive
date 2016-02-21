@@ -1,0 +1,140 @@
+
+###### Liste des NUMERICS des raws ainsi que leur nom ######
+
+124 raws répertoriés ci-dessous, si vous en connaissez d'autres,
+envoyez les a cette adresse: KoRnIRC@hotmail.com en précisant
+le serveur où ils sont présents...
+
+### Les divers 001 - ??? ( Non officiels )
+
+001	UNKNOWN			Message du serveur à la connection
+002	UNKNOWN			Serveur + version du serveur
+003	UNKNOWN			Date de création du serveur
+004	UNKNOWN			Serveur + Version du serveur + Hash de la session active
+005	UNKNOWN			Liste des modes acceptés sur ce serveur
+
+### Les réponses 200 - 395
+
+200 	RPL_TRACELINK		Détails avancés sur un liens entre 2 serveurs
+201 	RPL_TRACECONNECTING	Infos sur une connection
+202 	RPL_TRACEHANDSHAKE	H.S. <classe> <serveur>
+203 	RPL_TRACEUNKNOWN	???? <classe> [<ip du client>]
+204 	RPL_TRACEOPERATOR	Oper <classe> <pseudo>
+205 	RPL_TRACEUSER		User <classe> <pseudo>
+206 	RPL_TRACESERVER		Serv <classe> <parametres>
+208 	RPL_TRACENEWTYPE	<nouveau type> 0 <nom du client>
+211 	RPL_STATSLINKINFO	Statistiques sur un liens entre 2 serveurs
+212 	RPL_STATSCOMMAND	Statistiques sur une commande
+213 	RPL_STATSCLINE		Liste des C:Lines
+214 	RPL_STATSNLINE		Liste des N:Lines
+215 	RPL_STATSILINE		Liste des I:Lines
+216 	RPL_STATSKLINE		Liste des K:Lines
+218 	RPL_STATSYLINE		Liste des Y:Lines
+219	RPL_ENDOFSTATS		Fin des stats
+221	RPL_UMODEIS		Modes d'un utilisateur
+241	RPL_STATSLLINE		Liste des L:Lines
+242	RPL_STATSUPTIME		Uptime du serveur
+243	RPL_STATSOLINE		Liste des O:Lines
+244	RPL_STATSHLINE		Liste des H:Lines
+251	RPL_LUSERCLIENT		Réponse à la commande /lusers
+252	RPL_LUSEROP		Nombre d'IRCop sur le réseau
+253	RPL_LUSERUNKNOWN	Nombre de connections inconnues sur le serveur
+254	RPL_LUSERCHANNELS	Nombre de salons sur le réseau
+255	RPL_LUSERME		Nombre de clients et de serveurs
+256	RPL_ADMINME		Informations administratives
+257	RPL_ADMINLOC1		Informations administratives
+258	RPL_ADMINLOC2		Informations administratives
+259	RPL_ADMINMAIL		Mail de l'administrateur
+261 	RPL_TRACELOG		File <fichier log> <niveau de debug>
+300	RPL_NONE		Raw inutilisé
+301	RPL_AWAY		Le nick est away
+302	RPL_USERHOST		Réponse à USERHOST
+303	RPL_ISON		Réponse à la commande ISON
+305	RPL_UNAWAY		Retour d'away
+306	RPL_NOWAWAY		Vous venez de vous mettre away
+311	RPL_WHOISUSER		1ere ligne d'un whois ( nick user host * : realname )
+312	RPL_WHOISSERVER		Serveurs ou la cible de whois est connecté
+313	RPL_WHOISOPERATOR	La cible du whois est un IRCop
+314	RPL_WHOWASUSER		Idem que le raw 311 mé avec la commande whowas
+315 	RPL_ENDOFWHO		Fin du who
+317	RPL_WHOISIDLE		Temps d'inactivité de la cible du whois
+318	RPL_ENDOFWHOIS		Fin du whois
+319	RPL_WHOISCHANNELS	Salons sur lequels la cible du whois est connecté
+321	RPL_LISTSTART		Début du listing des salons
+322	RPL_LIST		Appelé à chaque salon trouvé par /list
+323	RPL_LISTEND		Fin du listing des salon
+324	RPL_CHANNELMODEIS	Liste des modes d'un salon
+331	RPL_NOTOPIC		Aucun topic sur le salon
+332	RPL_TOPIC		Topic du salon
+341	RPL_INVITING		Recu lorsque vous invitez un pseudo
+342 	RPL_SUMMONING		Reponse à la commande SUMMON
+351 	RPL_VERSION		Version du serveur actuel
+352 	RPL_WHOREPLY		Réponse à un /who
+353 	RPL_NAMREPLY		Liste des pseudos d'un salon
+364 	RPL_LINKS		Liens au serveur actuel
+365 	RPL_ENDOFLINKS		Fin de la commande links
+366 	RPL_ENDOFNAMES		Fin de la commande names
+367 	RPL_BANLIST		Liste des hosts bannis d'un salon
+368 	RPL_ENDOFBANLIST	Fin de la liste des hosts bannis
+369	RPL_ENDOFWHOWAS		Fin du whowas
+371 	RPL_INFO		Info quelconque du serveur
+372 	RPL_MOTD		Texte du MOTD
+374	RPL_ENDOFINFO		Fin de l'info
+375 	RPL_MOTDSTART		Début du motd
+376 	RPL_ENDOFMOTD		Fin du motd
+381 	RPL_YOUREOPER		Recu lorsque vous devenez IRCop
+382 	RPL_REHASHING		Recu lorsque vous rehashez les fichiers de configuration
+391 	RPL_TIME		Heure locale du serveur
+392 	RPL_USERSSTART		Liste des users du serveur
+393 	RPL_USERS		Liste des users
+394 	RPL_ENDOFUSERS		Fin de la liste des users
+395 	RPL_NOUSERS		Aucun users sur le serveur
+
+### Les erreurs 401 - 502
+
+401	ERR_NOSUCHNICK		Le nick demandé n'existe pas
+402	ERR_NOSUCHSERVER	Le serveur demandé n'existe pas
+403	ERR_NOSUCHCHANNEL	Le salon demandé n'existe pas
+404	ERR_CANNOTSENDTOCHAN	Vous ne pouvez pas envoyer de messages à ce salon
+405	ERR_TOOMANYCHANNEL	Trop de salons ouverts
+406	ERR_WASNOSUCHNICK	Nick introuvable lors d'un Whowas
+407	ERR_TOOMANYTARGETS	Trop de cible comme destination d'un message
+409	ERR_NOORIGIN		Commande PING ou PONG sans origine
+411	ERR_NORECIPIENT		Destination manquante
+412	ERR_NOTEXTTOSEND	Aucun texte a envoyer
+413	ERR_NOTOPLEVEL		Domaine d'un host est manquant
+414	ERR_WILDTOPLEVEL	Tentative d'utilisation de $ ou # dans un host
+421	ERR_UNKNOWNCOMMAND	Commande inconnue par le client et le serveur
+422	ERR_NOMOTD		Fichier MOTD manquant ( serveur )
+423	ERR_NOADMININFO		Aucune info sur l'admin du serveur
+424	ERR_FILEERROR		Erreur d'operation sur des fichiers...
+431	ERR_NONICKNAMEGIVEN	Pseudo manquant dans une commande
+432	ERR_ERRONEUSNICKNAME	Pseudo invalide
+433	ERR_NICKNAMEINUSE	Pseudo déjà utilisé
+436	ERR_NICKCOLLISION	Quand il y a 2 nicks identique lors de la jonction de 2 servs
+441	ERR_USERNOTINCHANNEL	Le pseudo est absent du salon demandé
+442	ERR_NOTONCHANNEL	Vous n'êtes pas sur le salon spécifié
+443	ERR_USERONCHANNEL	Inviter un user sur un salon ou il est déja présent
+444	ERR_NOLOGIN		L'user est connecté mé pas enregistré sur le serveur
+445	ERR_SUMMONDISABLED	Réponse à la commande SUMMON
+446	ERR_USERSDISABLED	Réponse à la commande USERS
+451	ERR_NOTREGISTERED	L'user est connecté mé pas enregistré sur le serveur
+461	ERR_NEEDMOREPARAMS	Paramètres insuffisants
+462	ERR_ALREADYREGISTERED	Envoyé si l'user cherche à changer son login au serv
+463	ERR_NOPERMFORHOST	Host refusé par le serveur
+464	ERR_PASSWDMISMATCH	Mot de passe du serveur incorrect
+465	ERR_YOUREBANNEDCREEP	Vous êtes banni du serveur
+467	ERR_KEYSET		Le salon à déjà un mot de passe
+471	ERR_CHANNELISFULL	Le salon est plein ( mode +l )
+472	ERR_UNKNOWMODE		Le mode demandé est inconnu
+473	ERR_INVITEONLYCHAN	Le salon est en mode +i ( invite only )
+474	ERR_BANNEDFROMCHAN	Vous êtes banni du salon ( mode +b )
+475	ERR_BADCHANNELKEY	Mot de passe du salon érroné
+481	ERR_NOPRIVILEGES	Vous n'avez pas assez de pouvoir pour cette commande
+482	ERR_CHANOPRIVSNEEDED	Vous devez être CHANOP pour cette commande
+483	ERR_CANTKILLSERVER	Les serveurs ne peuvent pas être killés
+491	ERR_NOOPERHOST		Votre host ne correspond à aucune O:Line ( IRCop )
+501	ERR_UMODEUNKNOWNFLAG	Mode inconnu
+502	ERR_USERSDONTMATCH	Tantative de changement du mode d'un user
+
+### Liste des raws par BombStrike... ###

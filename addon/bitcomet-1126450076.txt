@@ -1,0 +1,111 @@
+[1]
+1=Qual a pasta do seu Bitcomet?
+2=Você precisa setar a pasta principal do bitcomet! Use /Bcomet denovo.
+3=Ver os downloads
+4=Setar Pasta do bitcomet
+5=Linguagem
+6=Recebeu
+7=Enviou
+8=O arquivo
+9=Tempo decorrido
+10=Nenhum torrent ativo
+11=Sobre 
+12=Addon feito por SppyX em 2005, para ver detalhes de torrents no Bitcomet.
+
+[2]
+1=What's your Bitcomet Folder?
+2=You must set the Bitcomet's default folder! Uset /Bcomet again.
+3=View the Downloads
+4=Set Bitcomet's folder
+5=Language
+6=Downloaded
+7=Uploaded
+8=The file
+9=Elapsed Time
+10=No active torrent
+11=About
+12=Addon made by SppyX in 2005, to see details of a torrent in Bitcomet.
+
+[3]
+1=Quel est votre dossier Bitcomet ?
+2=Tu devez choisir un dossier par defaut Bitcomet! Après, re-tape /Bcomet
+3=Voir les téléchargements
+4=Choisir un dossier Bitcomet
+5=Langage
+6=Téléchargé
+7=Envoyé
+8=Le fichier
+9=Temps restant
+10=Pas de torrent actif
+11=À Propos
+12=Add-on fabriqué par SppyX en 2005, pour voir des détails d'un torrent avec Bitcomet.
+
+
+
+alias BCLang return $readini($script,%BcometLang,$$1)
+on *:load:{
+  var %e echo -s
+  %e 04BITCOMET DOWNLOADS! by SppyX
+  %e 
+  %e 02EN: 
+  %e 14This is an sample add-on to see the status of the 
+  %e 14Bitcomet's downloads. Tested in Bitcomet 0.59 with Downloads.xml.
+  %e 
+  %e 02PT:
+  %e 14É um simples add-on para ver o status de downloads
+  %e 14do seu Bitcomet. Testado no Bitcomet 0.59 com o Downloads.xml.
+  %e 
+  %e 02FR:
+  %e 14C'est une adjonction d'échantillon pour voir le statut des téléchargements du Bitcomet.  
+  %e 14Examiné dans Bitcomet 0.59 avec Downloads.xml.
+  %e 
+  %e 14(Sorry my Bad English and French (worst, google's translation from a bad english))
+  %e 
+  set %BcometLang $$?="Select your Language: $crlf      1 = Português $crlf      2 = English $crlf      3 = Français."
+  if (!%BcometLang) %BcometLang = 2
+  set %BcometFolder $sdir(c:\,$BCLang(1),OK)
+}
+
+alias Bcomet { 
+  if !%BcometFolder { set %BcometFolder $sdir(c:\,$BCLang(1),OK) }
+  if !%BcometFolder { echo $color(info) -a $BCLang(2) }
+  var %h 1,%f = %BcometFolder $+ Downloads.xml
+  hmake Bitcomet 100
+  while %h <= $lines(%f) {
+    tokenize 32 $remove($read(%f,n,%h),$chr(9))
+    if <torrent == $1 && $2 { hadd Bitcomet n $+ %h $encode($2-,m) }
+    inc %h 
+  }
+  hmake Bc2 100
+  var %x 1,%p = $iif($server && $active != status window,say,echo -a)
+  %p 2Bitcomet downloads:
+  while $hget(Bitcomet,%x).item { 
+    tokenize 14 $replacex($decode($hget(Bitcomet,$v1),m)," $+ $chr(32),")
+    var %y 1,%m
+    while $eval($+($,%y),2) {
+      %m = $eval($+($,%y),2)
+      if Size=* iswm %m { hadd Bc2 n1 $left($remove($v2,Size="),-1) }
+      if ElapsedTime=* iswm %m { hadd Bc2 n2 $left($remove($v2,ElapsedTime="),-1) }
+      if DataUpload=* iswm %m { hadd Bc2 n3 $left($remove($v2,DataUpload="),-1) }
+      if DataDownload=* iswm %m { hadd Bc2 n4 $left($remove($v2,DataDownload="),-1) }
+      if ShowName=* iswm %m { hadd Bc2 n5 $left($remove($v2,ShowName="),-1) }
+      inc %y
+    }
+    %p 04 $+ $hget(Bc2,n5) 14( $+ $bytes($hget(Bc2,n1)).suf $+ )12, $BCLang(6) $+ :04 $bytes($hget(Bc2,n4)).suf 14( $+ $round($calc($hget(Bc2,n4) / $hget(Bc2,n1) * 100),1) $+ $chr(37) $+ )12, $BCLang(7) $+ :04 $bytes($hget(Bc2,n3)).suf 14( $+ $round($calc($hget(Bc2,n3) / $hget(Bc2,n1)),1) $+ x $BCLang(8) $+ )12, $BCLang(9) $+ :04 $duration($hget(Bc2,n2),2)
+    inc %x
+  }
+  if !$hget(Bitcomet,1).item { %p $BCLang(10) }
+  hfree Bitcomet
+  hfree Bc2
+}
+
+menu query,channel,status,menubar {
+  Bitcomet Downloads:
+  .$BCLang(3):Bcomet
+  .$BCLang(4):set %BcometFolder $$sdir(c:\,$BCLang(1),OK)
+  .$BCLang(5):
+  ..$iif(%BcometLang == 1,$style(1)) Português:set %BcometLang 1
+  ..$iif(%BcometLang == 2,$style(1)) English:set %BcometLang 2
+  ..$iif(%BcometLang == 3,$style(1)) Français:set %BcometLang 3
+  .$BCLang(11):return $input($BCLang(12),o,$BCLang(11))
+}

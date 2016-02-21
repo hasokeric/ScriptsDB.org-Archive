@@ -1,0 +1,152 @@
+dialog tel {
+  title "Annuaire Inversé"
+  size -1 -1 118 71
+  option dbu
+  box "Annuaire inversé", 1, 2 2 115 68
+  edit "Numéro de telephone", 2, 5 12 63 10
+  button "Obtenir infos", 3, 70 12 42 10
+  list 4, 5 23 108 33, size
+  text "2004 -- RNT --", 5, 6 60 38 8
+  button "Fermeture", 6, 75 57 37 10, ok
+}
+
+on 1:dialog:tel:sclick:3: {
+  If (($did(tel,2) == $null) || ($len($did(tel,2)) != 10) || ($did(tel,2) !isnum)) {
+    did -r tel 4
+    did -a tel 4 Numero erroné
+  }
+  else {
+    did -b tel 2,3
+    did -f tel 1
+    set %pnumero $did(tel,2)
+    did -r tel 4
+    ptel
+  }
+}
+
+on 1:text:*:?:{
+  If ($strip($1) == !tel) {
+    If (($2 == $null) || ($len($2) != 10) || ($2 !isnum)) { msg $nick Synatxe correcte : !tel <numero> }
+    elseIf (($sock(tel) == tel) || ($sock(tel2) == tel2)) { msg $nick Désolé , une autre personne se sert de ce service . Veuillez reessayer plus tard . }
+    else {
+      set %numero $2
+      set %name.annu $nick
+      tel
+    }
+  }
+}
+
+alias tel {
+  sockclose tel
+  sockopen tel www.infobel.com 80
+  msg %name.annu Recherche pour le %numero en cours (patientez)
+}
+
+alias tel2 {
+  sockclose tel2
+  sockopen tel2 www.infobel.com 80
+}
+
+on 1:sockopen:tel2:{
+  if ($sockerr != 0) { echo -a Erreur : sock non ouvert }
+  else {
+    sockwrite -n tel2 GET /france/wp/revsearch/result.asp?qcode= $+ %codeq $+ &qphone= $+ %numero $+ &Submit.x=45&Submit.y=14 HTTP/1.1 $+ $crlf
+    sockwrite -t tel2 Host: www.infobel.com $+ $crlf
+    sockwrite -t tel2 User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90) $+ $crlf $+ $crlf
+    sockwrite -t tel2 Accept-Charset: iso-8859-1,*,utf-8 $+ $crlf $+ $crlf  
+  }
+}
+
+on 1:sockopen:tel:{
+  if ($sockerr != 0) { echo -a Erreur : sock non ouvert }
+  else {
+    sockwrite -n tel GET /france/wp/revsearch/default.asp  
+    sockwrite -t tel Host: www.infobel.com $+ $crlf
+    sockwrite -t tel User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90) $+ $crlf $+ $crlf
+    sockwrite -t tel Accept-Charset: iso-8859-1,*,utf-8 $+ $crlf $+ $crlf  
+  }
+}
+
+on 1:sockread:tel:{
+  sockread %buffer
+  tokenize 32 %buffer
+  if (NAME="qcode" value=" isin $1-) {
+    set %codeq $remove($19, value=","><TABLE)
+    tel2
+  }
+}
+
+on 1:sockread:tel2:{
+  sockread %buffer
+  tokenize 32 %buffer
+  If (pas de numéro isin $1-) {
+    msg %name.annu Désolé : Pas de numéro (possibilité de liste rouge ou numéro non attribué)
+  }
+  If (<TD WIDTH="83%"><B> isin $1-) {
+    msg %name.annu $remove($1-,<TD WIDTH="83%"><B>,</B></TD>)
+  }
+  If ((<TD WIDTH="85%" ALIGN="left" VALIGN="top"> isin $1-) && (eshop.infobel. !isin $1-) && (<a href= !isin $1-)) {
+    msg %name.annu $remove($1-,<TD WIDTH="85%" ALIGN="left" VALIGN="top">,</TD>,<A HREF='http://eshop.infobel.com/cdrom/cdrom.aspx'><B>Plus sur les CDRom Infobel</B></A>,<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0" WIDTH="90%"><TR><TD>,</TD></TR></TABLE></TD>,</TR></TABLE>)
+  }
+}
+
+
+;-------------------------------------------personnel--------------------------
+
+alias ptel {
+  sockclose ptel
+  sockopen ptel www.infobel.com 80
+}
+
+alias ptel2 {
+  sockclose ptel2
+  sockopen ptel2 www.infobel.com 80
+}
+
+on 1:sockopen:ptel2:{
+  if ($sockerr != 0) { echo -a Erreur : sock non ouvert }
+  else {
+    sockwrite -n ptel2 GET /france/wp/revsearch/result.asp?qcode= $+ %pcodeq $+ &qphone= $+ %pnumero $+ &Submit.x=45&Submit.y=14 HTTP/1.1 $+ $crlf
+    sockwrite -t ptel2 Host: www.infobel.com $+ $crlf
+    sockwrite -t ptel2 User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90) $+ $crlf $+ $crlf
+    sockwrite -t ptel2 Accept-Charset: iso-8859-1,*,utf-8 $+ $crlf $+ $crlf  
+  }
+}
+
+on 1:sockopen:ptel:{
+  if ($sockerr != 0) { echo -a Erreur : sock non ouvert }
+  else {
+    sockwrite -n ptel GET /france/wp/revsearch/default.asp  
+    sockwrite -t ptel Host: www.infobel.com $+ $crlf
+    sockwrite -t ptel User-Agent: Mozilla/4.0 (compatible; MSIE 5.5; Windows 98; Win 9x 4.90) $+ $crlf $+ $crlf
+    sockwrite -t ptel Accept-Charset: iso-8859-1,*,utf-8 $+ $crlf $+ $crlf  
+  }
+}
+
+on 1:sockread:ptel:{
+  sockread %buffer
+  tokenize 32 %buffer
+  if (NAME="qcode" value=" isin $1-) {
+    set %pcodeq $remove($19, value=","><TABLE)
+    ptel2
+  }
+}
+
+on 1:sockread:ptel2:{
+  sockread %buffer
+  tokenize 32 %buffer
+  If (pas de numéro isin $1-) {
+    did -a tel 4 Désolé : Pas de numéro
+    did -a tel 4 Liste rouge/Non attribué
+  }
+  If (<TD WIDTH="83%"><B> isin $1-) {
+    did -a tel 4 $remove($1-,<TD WIDTH="83%"><B>,</B></TD>)
+  }
+  If ((<TD WIDTH="85%" ALIGN="left" VALIGN="top"> isin $1-) && (eshop.infobel. !isin $1-) && (<a href= !isin $1-)) {
+    did -a tel 4 $remove($1-,<TD WIDTH="85%" ALIGN="left" VALIGN="top">,</TD>,<A HREF='http://eshop.infobel.com/cdrom/cdrom.aspx'><B>Plus sur les CDRom Infobel</B></A>,<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0" WIDTH="90%"><TR><TD>,</TD></TR></TABLE></TD>,</TR></TABLE>)
+  }
+}
+
+on 1:sockclose:ptel2:{
+  did -e tel 2,3
+}

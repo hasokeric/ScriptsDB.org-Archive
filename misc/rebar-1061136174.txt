@@ -1,0 +1,91 @@
+;menu et ouverture de la @win de test
+alias clic {
+  window -ak @clic 200 200 450 400
+}
+menu @clic {
+  rclick:/test 
+}
+
+;alias pour ecrire das la @win
+alias writeclic { aline $1 @clic $2- }
+
+;echo qui retourne les signaux envoyé par la dll de manière a pvr lancer des requetes (alias etc...)
+ON *:SIGNAL:MPOPUP.test: { 
+  echo -s 4 MPOPUP SIGNAL $1-
+  if ($1- == 0) {
+    echo -s Menu fermé
+  }
+  if ($1- == 1) {
+    writeclic 4 JHD SNIPPET MPOPUP 
+  }
+  if ($1- == 2) {
+    writeclic 1 Menu normal
+  }
+
+  if ($1- == 4) {
+    writeclic 1 Menu coché
+  }
+
+  if ($1- == 6) {
+    writeclic 1 Sous menu 1-1
+  }
+  if ($1- == 8) {
+    writeclic 1 Sous menu 2-2
+  }
+}
+
+alias test {
+  ;création du menu
+  echo -s $dll(rebar\MPopup.dll,MPCreateMenu,test)
+
+  ;on set le handle retourné dans une variable pour pouvoir créer des items
+  set %var1 $gettok($dll(rebar\MPopup.dll,MPCreateMenu,test),2,32)
+
+  ;création d' un item avec une icone 
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var1 > 1 1 0 JHD SNIPPET MPOPUP)
+  ;vous pouvez utilisez des icones, dans ce cas il faut mettre 0 en index - si vous utilisez 
+  ;une librairies d' icones alors il vous faut mettre l' index de l' icone
+  echo -s $dll(rebar\MPopup.dll,MPAddIcon, test > $scriptdir $+ jhdscript.ico > 0 ) 
+
+  ;on crée les items
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var1 > 2 0 0 normal)
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var1 > 3 0 1 disabled)
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var1 > 4 0 2 checked)
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var1 > 5 0 3 disabled+checked)
+
+  ;créaton d' un séparateur pour separer des menu sans sous menu des menu avec sous menu
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var1 > 0 0 0 -)
+
+  ;Création des sous menu
+  set %var2 $gettok($dll(rebar\MPopup.dll,MPAddSubMenu, %var1 > 1 0 0 Edit sous menu1 ),2,32)
+  set %var3 $gettok($dll(rebar\MPopup.dll,MPAddSubMenu, %var1 > 1 0 0 Edit sous menu2 ),2,32)
+
+  ;on crée les items du sous menu1
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var2 > 6 0 0 menu 1-1)
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var2 > 7 0 1 menu 1-2)
+
+  ;on crée les items du sous menu2
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var3 > 8 0 2 menu 2-1)
+  echo -s $dll(rebar\MPopup.dll,MPAddItem, %var3 > 9 0 3 menu 2-2)
+
+  ;Changement des couleurs du menu
+  ;Changement - Couleur du texte d'un item normal 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_TEXT > $rgb(255,0,0) )
+  ;Changement - Couleur d'arrière-plan du menu 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_BACK  > $rgb(243,246,243) )
+  ;Changement - Couleur du texte d'un item menu désactivé 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_GRAY > $rgb(0,0,255) )
+  ;Changement - Couleur d'un item menu sélectionné 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_HIGH > $rgb(0,0,0) )
+  ;Changement - Couleur de la boîte d'un item menu sélectionné 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_HBOX > $rgb(255,255,255) )
+  ;Changement - Couleur de la bordure verticale du menu 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_BAND > $rgb(255,200,0) )
+  ;Changement - Couleur de la boîte autour du check d'un item coché
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_CBOX > $rgb(255,255,0) )
+  ;Changement - Couleur intérieure de la boîte du check d'un item coché 
+  echo -s $dll(rebar\MPopup.dll,MPMenuColor,test > RGB_BBOX > $rgb(255,255,212) )
+
+  ;on fait apparaitre le menu suivant les coordonnées précisées
+  echo -s $dll(rebar\MPopup.dll,MPopup,test > $mouse.dx $mouse.dy center center left)
+}

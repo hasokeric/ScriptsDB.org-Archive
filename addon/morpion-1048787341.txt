@@ -1,0 +1,231 @@
+;%Morp.G désigne les cases tu tableau lit de haut à gauche en bas à droit
+;dedans le 4 représente rien, le 0 l'adversaire et le 1 sois même
+;donc %Morp.G = 4 4 4 1 1 1 4 4 4
+;revient à la 2 ème ligne de croix ( si croix c sois même )
+;%Morp.G contient ce qu'il y a dans chaque case
+;%Morp.J : $true si c à son tour de jouer sinon $false
+;%Morp.Me : si on est dans %Morp.G représenté par 0 ou 1
+;%Morp.C : Pour savoir si on à commencer premièrs ou deuxième
+;%Morp.add : le nick de l'adverssaire
+;%Morp.R : contient $true si l'autre veux recommencer
+
+alias Morpion.init {
+  ;Désinne le cadrillage
+  if (!$window(@Morp)) window -apCB @Morp
+  else drawrect -f @Morp 15 15 1 1 1000 1000
+  drawfill @Morp 15 15 1 1
+
+  drawrect @Morp 1 2 20 20 100 100
+  drawrect @Morp 1 2 20 20 200 200
+  drawrect @Morp 1 2 20 20 300 300
+
+  drawrect @Morp 1 2 320 320 -100 -100
+  drawrect @Morp 1 2 320 320 -200 -200
+  drawrect @Morp 1 2 320 320 -300 -300
+
+  ;affiche le score
+  if (!%Morp.S) set %Morp.S 0
+  if (%Morp.S > 0) {
+    drawtext @Morp 1 Arial 15 340 20 $me : %Morp.S
+    drawtext @Morp 1 Arial 15 340 40 %Morp.Add : - $+ %Morp.S
+  }
+  else {
+    drawtext @Morp 1 Arial 15 340 20 $me : %Morp.S
+    drawtext @Morp 1 Arial 15 340 40 %Morp.Add : $abs(%Morp.S)
+
+  }
+
+  set %Morp.G 4 4 4 4 4 4 4 4 4
+}
+
+Alias Morpion.add {
+  ;Rajoute $2 ( X ou O ) à la case corepsondante ( numéroté de 1 à 9 )
+
+  if ($1 == 1) drawtext @Morp 1 Arial 100 35 15 $2
+  elseif ($1 == 2) drawtext @Morp 1 Arial 100 135 15 $2
+  elseif ($1 == 3) drawtext @Morp 1 Arial 100 235 15 $2
+
+  elseif ($1 == 4) drawtext @Morp 1 Arial 100 35 115 $2
+  elseif ($1 == 5) drawtext @Morp 1 Arial 100 135 115 $2
+  elseif ($1 == 6) drawtext @Morp 1 Arial 100 235 115 $2
+
+  elseif ($1 == 7) drawtext @Morp 1 Arial 100 35 215 $2
+  elseif ($1 == 8) drawtext @Morp 1 Arial 100 135 215 $2
+  elseif ($1 == 9) drawtext @Morp 1 Arial 100 235 215 $2
+
+}
+
+
+;Ceci fait $1 + $2 + $3 des case corespondante cf le début
+alias Morpion.calc return $calc($gettok(%Morp.G,$1,32) + $gettok(%Morp.G,$2,32) + $gettok(%Morp.G,$3,32))
+
+alias Morpion.win {
+  ;Quand la partie est fini
+  set %morp.J $false
+  if (%Morp.Me == $1) { drawtext @Morp 1 Arial 15 340 60 tu as gagné | inc %Morp.S }
+  elseif ($1 == 2) drawtext @Morp 1 Arial 15 340 60 Match null
+  else { drawtext @Morp 1 Arial 15 340 60 tu as perdu | dec %Morp.S }
+
+  ;Pour recommencer
+  if ($?!="voulez vous recommencez ?") {
+    if (%Morp.R) Morpion.New.Party
+    else {
+      set %Morp.R $true
+      .notice %Morp.Add Morp.new.Party.OK
+      ;On envoit à la personne qu'on est ok
+    }
+  }
+  else .notice %Morp.add Morp.New.Party.Non
+  ;Sinon on dit que non on veux pas
+}
+
+Alias Morpion.New.Party {
+  ;Initanalise une nouvelle partie
+
+  if (%Morp.C) set %Morp.C $false
+  else set %Morp.C $true
+  set %Morp.J %Morp.C
+  Morpion.init
+}
+alias Morpion.look {
+  ;ceci vas regarder si on a perdu ou gagné
+  if ($Morpion.calc(1,2,3) == 0) Morpion.win 1 2 3
+  elseif ($Morpion.calc(1,2,3) == 3) Morpion.Win 1 1 2 3
+  elseif ($Morpion.calc(4,5,6) == 0) Morpion.Win 0 4 5 6
+  elseif ($Morpion.calc(4,5,6) == 3) Morpion.Win 1 4 5 6
+  elseif ($Morpion.calc(7,8,9) == 0) Morpion.Win 0 4 8 9
+  elseif ($Morpion.calc(7,8,9) == 3) Morpion.Win 1 7 8 9
+
+  elseif ($Morpion.calc(1,4,7) == 0) Morpion.Win 0 1 4 7
+  elseif ($Morpion.calc(1,4,7) == 3) Morpion.Win 1 1 4 7
+  elseif ($Morpion.calc(2,5,8) == 0) Morpion.Win 0 2 5 8
+  elseif ($Morpion.calc(2,5,8) == 3) Morpion.Win 1 2 5 8
+  elseif ($Morpion.calc(3,6,9) == 0) Morpion.Win 0 3 6 9
+  elseif ($Morpion.calc(3,6,9) == 3) Morpion.Win 1 3 6 9
+
+  elseif ($Morpion.calc(1,5,9) == 0) Morpion.Win 0 1 5 9
+  elseif ($Morpion.calc(1,5,9) == 3) Morpion.Win 1 1 5 9
+  elseif ($Morpion.calc(3,5,7) == 0) Morpion.Win 0 3 5 7
+  elseif ($Morpion.calc(3,5,7) == 3) Morpion.Win 1 3 5 7
+  elseif (4 !isin %Morp.g) Morpion.win 2
+}
+
+menu @Morp {
+  dclick:{
+    ;Quand on double clicque sur une case on met le n° de la case dans une var
+    if ($inrect($mouse.x,$mouse.y,20,20,100,100)) var %Morp.temp 1
+    elseif ($inrect($mouse.x,$mouse.y,120,20,100,100)) var %Morp.temp 2
+    elseif ($inrect($mouse.x,$mouse.y,220,20,100,100)) var %Morp.temp 3
+
+    elseif ($inrect($mouse.x,$mouse.y,20,120,100,100)) var %Morp.temp 4
+    elseif ($inrect($mouse.x,$mouse.y,120,120,100,100)) var %Morp.temp 5
+    elseif ($inrect($mouse.x,$mouse.y,220,120,100,100)) var %Morp.temp 6
+
+    elseif ($inrect($mouse.x,$mouse.y,20,220,100,100)) var %Morp.temp 7
+    elseif ($inrect($mouse.x,$mouse.y,120,220,100,100)) var %Morp.temp 8
+    elseif ($inrect($mouse.x,$mouse.y,220,220,100,100)) var %Morp.temp 9
+    if (($gettok(%Morp.G,%Morp.temp,32) == 4) && (%Morp.J) ) {
+      ;On l'ajoute %Morp.G
+      set %Morp.G $puttok(%Morp.G,%Morp.me,%Morp.temp,32)
+      ;On la désinne
+      Morpion.add %Morp.temp X
+      .notice %Morp.Add Morp.New %Morp.G %Morp.temp
+      ;On regarde si qqn à gagné
+      Morpion.look
+      set %Morp.J $false
+    }
+  }
+}
+
+;Quand on reçoit ou à cliquer l'autre
+on ^1:notice:Morp.New ? *:?:{
+  if ($nick == %Morp.Add) {
+    ;Donc là par exemple :
+    ;$1- = Morp.New 1 0 0 4 1 1 0 0 0 5
+    ;Avec 5 qui représente la case qui a changé
+    ;On remaplce dans son %Morp.G la case change
+    set %Morp.g $puttok(%Morp.G,$iif(%Morp.me == 0,1,0),$11,32)
+
+    ;Si on a pas le même %Morp.G que l'adverssaire alors une erreur
+    if (%Morp.g != $2-10) {
+      .Notice %Morp.add Morp.Error
+      drawtext @Morp 1 Arial 15 340 80 Une erreur est intervenu on recommence la parti
+      .timer 1 0.1 Morpion.win 2
+    }
+
+    ;Si tout vas bien on affiche, on regarde si qqn à gagner puis on dit que c à soit de jouer
+    else {
+      Morpion.add $11 O
+      .timer 1 0 Morpion.look
+      set %Morp.J $true
+    }
+    haltdef
+  }
+}
+
+;Quand qqn vous demande si il veux jouer avec vous ( il veux pas de $?! dans remote )
+alias Morp.New.Play {
+  if ($window(@morp)) .notice $1 Je suis en train de jouer
+
+  elseif ($?!="Voulez vous jouer avec $1 ?") {
+    .notice $1 Morp.Play.OK
+    set %Morp.me 1
+    set %Morp.J $false
+    set %Morp.C $false
+    set %Morp.add $1
+    Morpion.init
+  }
+  elseif ($?!="Voulez vous ignoré $1 ?") { ignore -nu1200 $address($1,2) | .notice $1 tu es ignoré }
+  else .notice $1 Je ne veux pas jouer avec toi
+}
+
+Si on est déjà ok on inianalise sinon on lui dit
+on ^1:Notice:Morp.new.Party.OK:?:{
+  if ($nick == %Morp.Add) {
+    if (%Morp.R) .timer 1 1 Morpion.New.Party
+    else {
+      set %Morp.R $true
+      .notice %Morp.Add Morp.new.Party.OK
+    }
+  }
+  halt
+}
+
+;Quand ya une error on le dit à l'autre pour que tous recommence en même temps
+on ^1:Morp.Error:?:{
+  if ($nick == %Morp.Add) {
+    drawtext @Morp 1 Arial 15 340 80 Une erreur est intervenu on recommence la parti
+    Morpion.win 2
+    halt
+  }
+}
+
+;Si l'autre est pas ok pour un new party
+on ^1:notice:Morp.New.Party.Non:?:{
+  if ($nick == %Morp.add) drawtext @Morp 1 Arial 15 340 100 votre adversaire veux arrêter la partie
+  halt
+}
+
+;Si qqn demande un jeux
+on ^1:Notice:Morp.Play:?:{ .timer 1 1 Morp.New.Play $nick | halt }
+
+;On reçoit cela quand on a proposer une partie et que la personne est ok
+on ^1:Notice:Morp.Play.ok:?:{
+  if ($nick == %Morp.Nadd) {
+    set %Morp.me 0
+    set %Morp.J $true
+    set %Morp.C $true
+    set %Morp.add $nick
+    unset %Morp.Nadd
+    morpion.init
+    halt
+  }
+}
+
+;Le menu
+menu Nicklist {
+  Proposer un morpion:set %Morp.Nadd $1 | .notice $1 Morp.Play
+}
+
+;Quand on ferme la fenetre on vire toutes les var
+on 1:close:@Morp:unset %Morp.*
